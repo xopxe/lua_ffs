@@ -42,7 +42,7 @@ void main()
       float phi = sqrt( g_accel*M_PI*w );
       float phase = (pos.x*dirx[i]+pos.y*diry[i])*w + T*phi;
       float sin_phase = sin(phase);
-      float cos_phase = sin(phase);
+      float cos_phase = cos(phase);
 
       pos.z += 2*amplitude[i] * (pow( 0.5*(sin_phase+1) , K) - 1.0);
 
