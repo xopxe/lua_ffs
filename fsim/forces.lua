@@ -144,6 +144,8 @@ M.floater_points = function ( f )
         --only on z axis
         --velocityw:mul_scalar( -f.drag, drag )
         drag:set(0.0, 0.0, -f.drag*velocityw[3])
+      else
+        drag:set(0.0, 0.0, 0.0)
       end
       Ff:add(drag, Ff)
 
