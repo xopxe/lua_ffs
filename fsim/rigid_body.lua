@@ -137,10 +137,10 @@ M.update = function ( b, dt )
   b.position:add_scaled( b.velocity, dt, b.position )
 
   -- integrate orientation
-  -- angvel +=  inviner* (torque - cross(angvel, iner*angvel)) * 0.5dt
+  -- angvel +=  inviner* (torque - cross(angvel, iner*angvel)) * dt
   local angular_incr = b.inertia.tensor.inverse:dot_vec(
     b.torque - vec3.cross( b.angular_velocity, b.inertia.tensor:dot_vec(b.angular_velocity) )) --FIXME allocs
-  b.angular_velocity:add_scaled( angular_incr, 0.5*dt, b.angular_velocity )
+  b.angular_velocity:add_scaled( angular_incr, dt, b.angular_velocity )
 
   -- orient += (orient * quat(angvel, 0))*0.5dt
   local q_angvel = quat.new{b.angular_velocity[1], b.angular_velocity[2], b.angular_velocity[3], 0}
