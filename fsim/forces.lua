@@ -46,8 +46,10 @@ M.get_spring = function ( f )
     force:mul_scalar( F / l, force )
     if not f.fixed1 then
       if f.drag and f.drag~=0.0 then 
-        f.body1:get_pointd_velocityw(f.point2, velocityw)
+        f.body1:get_pointd_velocityw(f.point1, velocityw)
         velocityw:mul_scalar( -f.drag, drag1 )
+      else
+        drag1:set(0.0, 0.0, 0.0)
       end
       drag1:add(force, drag1)
       f.body1:add_forcew_at_pointd( drag1, f.point1 )
@@ -56,6 +58,8 @@ M.get_spring = function ( f )
       if f.drag and f.drag~=0.0 then 
         f.body2:get_pointd_velocityw(f.point2, velocityw)
         velocityw:mul_scalar( -f.drag, drag2 )
+      else
+        drag2:set(0.0, 0.0, 0.0)
       end
       force:unm( force )
       drag2:add(force, drag2)
