@@ -198,9 +198,16 @@ M.foil.wing = function ( f )
     --lift = drag:cross(f.normal, lift):cross(f.drag, lift):normalize(lift)
     drag:cross(f.normalw, lift)
     lift:cross(drag, lift)
-    lift:normalize(lift)
+    local lift_norm_sq = lift:norm_sq()
+    if lift_norm_sq > EPS then
+      lift:div_scalar( sqrt(lift_norm_sq), lift ) --normalize
+    else
+      lift:set(0.0, 0.0, 0.0) -- flow along the normal: lift direction undefined
+    end
 
-    f.aoa = math.asin( drag:dot(f.normalw) )
+    local sin_aoa = drag:dot(f.normalw)
+    if sin_aoa > 1.0 then sin_aoa = 1.0 elseif sin_aoa < -1.0 then sin_aoa = -1.0 end
+    f.aoa = math.asin( sin_aoa )
     local ro = localmedium.density_pressure_temperature( pos ) 
 
     local Cl, Cd, Cm = aero_data.sample( f.aoa )
