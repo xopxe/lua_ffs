@@ -79,7 +79,7 @@ M.get_gravity = function ( f )
   f.apply = function ()
     f.body2.position:sub( f.body1.position, force ) 
     local l2 = force:norm_sq()
-    local F = G * (f.body1.inertia.mass^2) / l2
+    local F = G * f.body1.inertia.mass * f.body2.inertia.mass / l2
     force:mul_scalar( F / (math.sqrt(l2)), force )
     if not f.fixed1 then 
       f.body1:add_forcew_at_pointd( force )
