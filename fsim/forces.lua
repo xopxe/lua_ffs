@@ -14,7 +14,7 @@ M.get_constant_w = function ( f )
   f.force = f.force or vec3.new() -- world space
   f.bbox = aabb.new(f.point-boxsize, f.point+boxsize) -- design space
   f.apply = function()
-    f.body:add_forcew_at_pointd( f.point )
+    f.body:add_forcew_at_pointd( f.force, f.point )
   end
   return f
 end
