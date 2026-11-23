@@ -244,8 +244,10 @@ M.floater.sphere = function ( f )
   --assert(f.surface)
   assert(f.body)
   assert(f.radius)
+  -- density of the sphere's contents whose mass is NOT already in the body's
+  -- inertia (e.g. a balloon's hot air). Use 0 for a solid body.
   f.ro = f.ro or medium.atmosphere.ro0
-  
+
   local vol = (4.0/3.0)*PI*f.radius^3
 
   f.placement = f.placement or vec3.new{0,0,0} -- in design coordinates

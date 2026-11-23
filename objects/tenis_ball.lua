@@ -17,7 +17,7 @@ forces = {
     params = {
       name = 'f1',
       radius = radius,
-      ro = mass / ((4/3)*3.14159*radius^3),
+      ro = 0.0, -- solid: its mass is already in inertia (gravity applies it)
       placement = V3{0.0, 0.0, 0.0},
     }
   }, 
