@@ -28,7 +28,7 @@ bboxes.hollow_sphere = bboxes.solid_sphere
 
 moments.shell_sphere = function ( s ) --radius, radius_int, mass
   local radius, radius_int, mass = s.radius, s.radius_int, s.mass
-  local m = (2.0 / 5.0) * mass * (radius^5-radius_int^5)/(radius^3-radius_int^4)
+  local m = (2.0 / 5.0) * mass * (radius^5-radius_int^5)/(radius^3-radius_int^3)
   return vec3.new{m, m, m}
 end
 bboxes.shell_sphere = bboxes.solid_sphere
@@ -60,39 +60,45 @@ bboxes.cuboid = function ( s ) --size
     vec3.new{size[1]/2,size[2]/2,size[3]/2})
 end
 
+-- cylinders have their axis along x
 moments.solid_cylinder = function ( s ) --radius, length, mass
   local radius, length, mass = s.radius, s.length, s.mass
   local C = (1.0 / 12.0) * mass * (3.0*radius*radius + length*length )
   return vec3.new{ 0.5 * mass * radius * radius, C, C }
 end
 bboxes.solid_cylinder = function ( s ) --radius, length
-  local radius, height_2 = s.radius, s.height/2
-  return aabb.new(vec3.new{-radius,-radius,-height_2}, 
-    vec3.new{radius,radius,height_2})
+  local radius, length_2 = s.radius, s.length/2
+  return aabb.new(vec3.new{-length_2,-radius,-radius},
+    vec3.new{length_2,radius,radius})
 end
 
+-- thin-walled, open ends
 moments.hollow_cylinder = function ( s ) --radius, length, mass
   local radius, length, mass = s.radius, s.length, s.mass
-  local C = (1.0 / 12.0) * mass * (3.0*radius*radius + length*length )
-  return vec3.new{ 0.5 * mass * radius*radius, C, C }
+  local C = (1.0 / 12.0) * mass * (6.0*radius*radius + length*length )
+  return vec3.new{ mass * radius*radius, C, C }
 end
 bboxes.hollow_cylinder = bboxes.solid_cylinder
 
-moments.ellipsoid = function ( s ) --a, b, c, m
-  local a, b, c, m = s.a, s.b, s.c, s.m
-  local M = m / 5.0
-  return vec3.new( m*(b*b + c*c), M*(a*a + c*c), M*(a*a + b*b) )
+moments.ellipsoid = function ( s ) --a, b, c, mass
+  local a, b, c, mass = s.a, s.b, s.c, s.mass
+  local M = mass / 5.0
+  return vec3.new{ M*(b*b + c*c), M*(a*a + c*c), M*(a*a + b*b) }
 end
 bboxes.ellipsoid = function ( s ) --a, b, c
   return aabb.new(vec3.new{-s.a,-s.b,-s.c}, vec3.new{s.a,s.b,s.c})
 end
 
-moments.rod = function ( s ) --l, m
-  local l, m = s.l, s.m
-  return vec3.new{ m*l*l / 100, 0, m*l*l / 100 }
+-- thin rod along y, modeled as a solid cylinder of radius l/100 so the
+-- tensor stays invertible
+moments.rod = function ( s ) --l, mass
+  local l, mass = s.l, s.mass
+  local r = l/100
+  local C = (1.0 / 12.0) * mass * (3.0*r*r + l*l)
+  return vec3.new{ C, 0.5 * mass * r*r, C }
 end
 bboxes.rod = function ( s ) --l
-  local l_2, r = s.l, s.l/100
+  local l_2, r = s.l/2, s.l/100
   return aabb.new(vec3.new{-r,-l_2,-r}, vec3.new{r,l_2,r})
 end
 
@@ -167,7 +173,10 @@ M.element = {
       bbox.max:add(e.placement, bbox.max)
       e.bbox = bbox
       e.tensor = tensors.from_moment( e.moment )
-      e.offset = vec3.new{0.0, 0.0, 0.0} -- all moments from shape defined with 0,0,0 as center
+      -- moments from shape are defined about the shape's own center, so as a
+      -- standalone body the center of gravity is at placement
+      -- (tensors.from_elements overwrites this when used as a sub-element)
+      e.offset = -e.placement
     end
     e.update()
     return e
