@@ -36,7 +36,7 @@ write = function()
     a.position[1]..' '..
     a.position[3]..' '..
     a.velocity[1]..' '..
-    a.velocity[3]..
+    a.velocity[3]..' '..
     a.forces.wing.aoa..' '..
     '\n'
   )
