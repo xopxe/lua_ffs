@@ -13,6 +13,8 @@ local rad, sin, cos, sqrt = math.rad, math.sin, math.cos, math.sqrt
 local vec3, vec4 = glmath.vec3, glmath.vec4
 
 assert(world.medium.surface.generator == 'sine_wave', 'shader / wave generator mismatch')
+local MAX_WAVES = 16 -- as in the .vert
+assert(#world.medium.surface <= MAX_WAVES, 'the GPU ocean draws at most '..MAX_WAVES..' waves')
 
 -- build, compile, and link our shader program ---------------------------------
 --local prog, vsh, fsh = gl.make_program({vertex="fvis-moongl/shaders/7.3.camera.vert",
@@ -29,10 +31,9 @@ gl.use_program(prog) -- don't forget to activate/use the shader before setting u
 local loc 
 
 loc = {
-  amplitude = gl.get_uniform_location(prog, "amplitude"),
-  length = gl.get_uniform_location(prog, "length"),
-  dirx = gl.get_uniform_location(prog, "dirx"),
-  diry = gl.get_uniform_location(prog, "diry"),
+  n_waves = gl.get_uniform_location(prog, "n_waves"),
+  waves = {},
+  h0 = gl.get_uniform_location(prog, "h0"),
   x_min = gl.get_uniform_location(prog, "x_min"),
   y_min = gl.get_uniform_location(prog, "y_min"),
   x_step = gl.get_uniform_location(prog, "x_step"),
@@ -58,6 +59,9 @@ loc = {
     alpha = gl.get_uniform_location(prog, "material.alpha"),
   },
 }
+for i=1, MAX_WAVES do
+  loc.waves[i] = gl.get_uniform_location(prog, "waves["..(i-1).."]")
+end
 
 local frustum_space = {
   vec4(1,1,-1, 1),
@@ -140,22 +144,14 @@ M.prepare_scene = function( world, SCR_WIDTH, SCR_HEIGHT )
   gl.uniform_matrix4f(loc.projection, true, world.transforms.projection)
   gl.uniformf(loc.view_pos, camera.position)
   
-  -- wave model
-  local amplitude = vec4()
-  local length = vec4()
-  local dirx = vec4()
-  local diry = vec4()
-  for i=1, 4 do
-    local wave = world.medium.surface[i]
-    amplitude[i] = wave.amplitude
-    length[i] = wave.length
-    dirx[i] = cos(wave.dir)
-    diry[i] = sin(wave.dir)
+  -- wave model, as in fsim/surface.lua
+  local surface = world.medium.surface
+  for i=1, #surface do
+    local wave = surface[i]
+    gl.uniformf(loc.waves[i], wave.amplitude, wave.length, wave.dirx, wave.diry)
   end
-  gl.uniformf(loc.amplitude, unpack(amplitude))
-  gl.uniformf(loc.length, unpack(length))
-  gl.uniformf(loc.dirx, unpack(dirx))
-  gl.uniformf(loc.diry, unpack(diry))
+  gl.uniformi(loc.n_waves, #surface)
+  gl.uniformf(loc.h0, surface.h0)
 
   gl.uniformf(loc.t, world.now)
 
