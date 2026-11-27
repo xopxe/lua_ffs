@@ -58,6 +58,18 @@ lua start.lua
 
 In the start_lua file, you will find a reference to world/* files, which define scenarios. You can start from here to see what sort of stuff you can do. Also, there are simulation parameters.
 
+## Tests
+
+The physics (everything under fsim/, the loader and the world/ scenarios) has tests that run headless, with no dependencies. From the project root:
+
+```sh
+lua5.3 tests/run.lua                         # all tests
+lua5.3 tests/run.lua tests/test_forces.lua   # one file
+VERBOSE=1 lua5.3 tests/run.lua               # with tracebacks
+```
+
+Tests marked `xfail` document known bugs: they are expected to fail and don't break the run. If one starts passing, the run fails with `XPASS` so you can turn it into a regular `T.test`.
+
 ## Who
 
 <jvisca@fing.edu.uy> - [Grupo MINA](https://www.fing.edu.uy/inco/grupos/mina/), Facultad de Ingeniería - Udelar, 2024
