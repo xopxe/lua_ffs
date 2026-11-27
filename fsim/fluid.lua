@@ -47,6 +47,7 @@ M.drag_shape.sphere = function ( s )
   local drag = vec3.new{0.0,0.0,0.0}
   local relvel = vec3.new{0.0,0.0,0.0}   -- relative velocity
   local pos = vec3.new{0.0,0.0,0.0}  -- in w coordinated
+  local local_velocity = vec3.new{0.0,0.0,0.0}  -- of the placement point, in w coordinates
 
   local CD = 0.47  -- https://en.wikipedia.org/wiki/Drag_coefficient
   local area = PI * s.radius^2
@@ -63,7 +64,9 @@ M.drag_shape.sphere = function ( s )
       localmedium = medium.atmosphere
     end
 
-    s.body.velocity:sub( localmedium.current, relvel )
+    -- velocity of the shape itself, including the body's rotation
+    s.body:get_pointd_velocityw(s.placement, local_velocity)
+    local_velocity:sub( localmedium.current, relvel )
 
     local ro = localmedium.density_pressure_temperature( pos )
     drag_force( ro, relvel, CD, area, drag )
@@ -91,6 +94,7 @@ M.drag_shape.projectile = function ( s ) --made up
   local relvel = vec3.new{0.0,0.0,0.0}
   local pos = vec3.new{0.0,0.0,0.0}  -- in w coordinated
   local forwardw = vec3.new{0.0,0.0,0.0}  -- in w coordinated
+  local local_velocity = vec3.new{0.0,0.0,0.0}  -- of the placement point, in w coordinates
 
   local Cd_min = 0.1
   local Cd_max = 1.5
@@ -107,7 +111,9 @@ M.drag_shape.projectile = function ( s ) --made up
       localmedium = medium.atmosphere
     end
 
-    s.body.velocity:sub( localmedium.current, relvel )
+    -- velocity of the shape itself, including the body's rotation
+    s.body:get_pointd_velocityw(s.placement, local_velocity)
+    local_velocity:sub( localmedium.current, relvel )
     if relvel:norm_sq() <= EPS then
       return
     end
@@ -255,7 +261,20 @@ M.floater.sphere = function ( f )
   -- computation results
   local pos = vec3.new{0.0,0.0,0.0} -- in w coordinated
   local flotation = vec3.new{0.0,0.0,0.0} -- in w coordinated
-  local cg = vec3.new{0.0,0.0,0.0} -- used when cutting a surface
+  -- used when cutting a surface: centre of buoyancy of the part on one side
+  local offsetw = vec3.new{0.0,0.0,0.0} -- from the sphere's centre, in w coordinates
+  local cgw = vec3.new{0.0,0.0,0.0} -- in w coordinates
+  local cgd = vec3.new{0.0,0.0,0.0} -- in design coordinates
+
+  -- the cut is horizontal, so the centre of buoyancy of each part lies
+  -- straight above or below the sphere's centre in world space, whatever
+  -- the body's orientation
+  local function set_cg ( dz )
+    offsetw:set(0.0, 0.0, dz)
+    pos:add(offsetw, cgw)
+    f.body:transform_direction_wd(offsetw, cgd)
+    cgd:add(f.placement, cgd)
+  end
 
   f.apply = function ( now )
     local function apply_buoyancy( ro_medium, vol, buoyancy_center )
@@ -276,21 +295,19 @@ M.floater.sphere = function ( f )
     else -- cuts surface
       -- https://mathworld.wolfram.com/SphericalCap.html
       -- TODO surface not horizontal
-      local h = pos[3] + f.radius - surface_h
+      local h = pos[3] + f.radius - surface_h -- height of the part above
 
       local vol_above = (1.0/3.0)*PI*h*h*(3*f.radius-h)
-      local cg_h_above = f.placement[3] + (3*(2*f.radius-h)^2)/(4*(3*f.radius-h))
-      cg:set(f.placement[1], f.placement[2], cg_h_above) --FIXME z in design?
-      local ro_atm = medium.atmosphere.density_pressure_temperature( cg )
-      apply_buoyancy( ro_atm, vol_above, cg )
+      set_cg( (3*(2*f.radius-h)^2)/(4*(3*f.radius-h)) )
+      local ro_atm = medium.atmosphere.density_pressure_temperature( cgw )
+      apply_buoyancy( ro_atm, vol_above, cgd )
 
-      local vol_below = (4.0/3.0)*PI*f.radius^3 - vol_above
+      local vol_below = vol - vol_above
       -- mirrored from below
-      local h2 = 2*f.radius - h 
-      local cg_h_below = f.placement[3] - (3*(2*f.radius-h2)^2)/(4*(3*f.radius-h2))
-      cg:set(f.placement[1], f.placement[2], cg_h_below)
-      local ro_sea = medium.ocean.density_pressure_temperature( cg )
-      apply_buoyancy( ro_sea, vol_below, cg )
+      local h2 = 2*f.radius - h
+      set_cg( -(3*(2*f.radius-h2)^2)/(4*(3*f.radius-h2)) )
+      local ro_sea = medium.ocean.density_pressure_temperature( cgw )
+      apply_buoyancy( ro_sea, vol_below, cgd )
     end
   end
 
