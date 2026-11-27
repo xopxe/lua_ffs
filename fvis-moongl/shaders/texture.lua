@@ -65,6 +65,7 @@ M.prepare_scene = function( world, SCR_WIDTH, SCR_HEIGHT )
   gl.uniform_matrix4f(loc.view, true, world.transforms.view)
   -- projection transform (in this example it may change at every frame):
   gl.uniform_matrix4f(loc.projection, true, world.transforms.projection)
+  gl.uniformf(loc.view_pos, camera.position)
 
   if light then
     --[[
