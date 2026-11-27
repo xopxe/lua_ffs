@@ -14,6 +14,8 @@ local w = loader.load_world('world/sea.lua')
 --local w = loader.load_world('world/balloon.lua')
 --local w = loader.load_world('world/flight.lua')
 
+if w.init then w.init() end -- e.g. opens the world's data file
+
 view.init{
   window_title= 'simulate!',
   world = w,

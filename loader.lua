@@ -34,7 +34,7 @@ M.parse_loadworld = function ( wrld )
     math.randomseed(wrld.randomseed)
   end
 
-  local skiplist = {'IMPORT_BODY', 'BODY_FROM_NAME', 'V3', 'L', 'print'}
+  local skiplist = {'IMPORT_BODY', 'BODY_FROM_NAME', 'V3', 'L', 'print', 'init'}
   for _, s in ipairs(skiplist) do wrld[s] = nil end
 
   -- link names if available

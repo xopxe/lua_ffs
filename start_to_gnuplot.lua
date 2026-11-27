@@ -1,8 +1,10 @@
-local loader = require 'fsim.loader'
+local loader = require 'loader'
 
 local w = loader.load_world('world/drop.lua')
 --local w = loader.load_world('world/balloon.lua')
 --local w = loader.load_world('world/flight.lua')
+
+if w.init then w.init() end -- opens the world's data file
 
 local t_print = w.now
 
