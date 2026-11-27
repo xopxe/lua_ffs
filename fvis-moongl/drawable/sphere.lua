@@ -70,7 +70,7 @@ return function( params )
         end,
         delete = function(sphere)
           if not vao then return end
-          gl.delete_vertex_array(vao)
+          gl.delete_vertex_arrays(vao)
           gl.delete_buffers(vbo, ebo)
           vao, vbo, ebo, count = nil, nil, nil, nil
         end,

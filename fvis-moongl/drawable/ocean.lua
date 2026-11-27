@@ -78,7 +78,7 @@ return function()
         end,
         delete = function(wave)
           if not vao then return end
-          gl.delete_vertex_array(vao)
+          gl.delete_vertex_arrays(vao)
           gl.delete_buffers(vbo)
           vao, vbo = nil, nil
         end,

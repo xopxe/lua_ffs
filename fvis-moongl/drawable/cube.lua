@@ -73,7 +73,7 @@ return function()
         end,
         delete = function(cube)
           if not vao then return end
-          gl.delete_vertex_array(vao)
+          gl.delete_vertex_arrays(vao)
           gl.delete_buffers(vbo)
           vao, vbo = nil
         end,
