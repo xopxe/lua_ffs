@@ -45,6 +45,14 @@ M.init = function ( conf )
   M.conf.window_title = M.conf.window_title or "Lua_FSIM"
   world = assert(conf.world)
 
+  -- all shaders need a light; use a default when the world does not set one
+  world.light = world.light or {
+    direction = {0.0, 10.0, 2.0},
+    diffuse = {1.0, 1.0, 1.0},
+    ambient = {0.3, 0.3, 0.3},
+    specular = {1.0, 1.0, 1.0},
+  }
+
   do
     local camera_conf = world.camera or {}
     local class = camera_conf.class or 'camera_fps'
