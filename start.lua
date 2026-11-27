@@ -30,35 +30,51 @@ end
 
 local total_run_time = 60 --math.huge --600
 local fsim_step, fsim_run_time, fsim_run_cycles = 0.001, 0, 0
+-- when the simulation falls further behind the clock than this (a stall, or
+-- steps that cost more than fsim_step), it slows down rather than catching up
+local fsim_max_lag = 0.1
+local fsim_time_lost = 0.0  -- clock time the simulation could not keep up with
 local fvis_step, fvis_run_time, fvis_run_cycles = 1/30, 0, 0
 local fsim_write_step = total_run_time/200
 
+-- simulated time starts at 0 and runs in fixed steps of fsim_step, whatever
+-- the frame rate, so runs are reproducible; the clock only says how far to go.
+-- Stopping and writing count steps, as w.now accumulates rounding errors.
+local fsim_total_steps = math.floor(total_run_time/fsim_step + 0.5)
+local fsim_write_every = fsim_write_step and math.max(1, math.floor(fsim_write_step/fsim_step + 0.5))
+
+local function fsim_write ()
+  if fsim_write_every and fsim_run_cycles % fsim_write_every == 0 then
+    print(w.now)
+    w.write()
+  end
+end
+
+w.now = 0
+fsim_write()  -- initial state
+
 local now = get_time()
-w.now = now
-local stop_time = now + total_run_time
-
-local t_sim = w.now
-local t_print = w.now
-local t_view = w.now
-
-local fsim_step_size, fsim_step_total = 0.0, 0.0
+local clock_start = now  -- clock time at which simulated time was 0
+local t_view = now
 
 if profiler then profiler.start(0.01, 3) end
 repeat
 
-  if w.now+fsim_step<now then
-    --if w.now<now then
-    --w:step(now-w.now)
-    fsim_step_size = now-w.now
-    fsim_step_total = fsim_step_total + fsim_step_size
-    fsim_run_time = fsim_run_time + time_call(w.step, w, fsim_step_size)
-    fsim_run_cycles = fsim_run_cycles + 1
+  local sim_target = now - clock_start
+  if sim_target - w.now > fsim_max_lag then
+    local lost = sim_target - w.now - fsim_max_lag
+    fsim_time_lost = fsim_time_lost + lost
+    clock_start = clock_start + lost
+    sim_target = w.now + fsim_max_lag
   end
-
-  if fsim_write_step and now>=t_print then
-    t_print = t_print + fsim_write_step
-    print(w.now)
-    w.write()
+  -- step for at most a frame's worth of clock time, so the window keeps
+  -- drawing even when steps cost more than the time they simulate
+  local step_deadline = now + fvis_step
+  while fsim_run_cycles < fsim_total_steps and w.now + fsim_step <= sim_target do
+    fsim_run_time = fsim_run_time + time_call(w.step, w, fsim_step)
+    fsim_run_cycles = fsim_run_cycles + 1
+    fsim_write()
+    if get_time() > step_deadline then break end
   end
 
   if now>=t_view then
@@ -73,12 +89,13 @@ repeat
 
   now = get_time()
 
-until w.now>=stop_time or view.should_close()
+until fsim_run_cycles >= fsim_total_steps or view.should_close()
 if profiler then print( profiler.format( profiler.stop() ) ) end
 
 print ('closing world at t', w.now)
 w.close()
 
-print ('fsim runtime', fsim_run_time, 'steps', fsim_run_cycles, 
-  'steptime', fsim_run_time/fsim_run_cycles, 'stepsize', fsim_step_total/fsim_run_cycles)
+print ('fsim runtime', fsim_run_time, 'steps', fsim_run_cycles,
+  'steptime', fsim_run_time/fsim_run_cycles, 'stepsize', fsim_step)
+print ('fsim fell behind the clock by', fsim_time_lost, 's')
 print ('fvis steptime', fvis_run_time/fvis_run_cycles)
