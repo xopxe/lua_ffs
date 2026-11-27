@@ -69,6 +69,12 @@ M.init = function ( conf )
   end
 
 -- glfw inits and window creation ---------------------------------------------
+  if glfw.get_platform and glfw.get_platform() == 'wayland' then
+    assert(glfw.platform_supported('x11'),
+      "MoonGL requires GLX; run the visualizer with XWayland available")
+    glfw.init_hint('platform', 'x11')
+    glfw.init()
+  end
   glfw.version_hint(3, 3, 'core')
   window = glfw.create_window(SCR_WIDTH, SCR_HEIGHT, M.conf.window_title)
   glfw.make_context_current(window)

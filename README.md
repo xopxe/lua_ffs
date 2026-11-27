@@ -48,6 +48,8 @@ sudo make install
 
 Also, there is some code around to write data for gnuplot, especially for debugging purposes.
 
+On Wayland, the visualizer uses GLFW's X11 platform because GLEW requires GLX; XWayland must be available.
+
 ## How to run
 
 ```sh
