@@ -22,6 +22,10 @@ local function vec3_from_world( v )
   return vec3(v[1], v[3], -v[2])
 end
 
+-- bounding box centre, in design and world coordinates (fsim vectors)
+local fvec3 = require("fsim.vec3")
+local bbox_centerd, bbox_centerw = fvec3.new{0.0, 0.0, 0.0}, fvec3.new{0.0, 0.0, 0.0}
+
 local SCR_WIDTH, SCR_HEIGHT = 800, 600
 
 -- stuff to be initted
@@ -198,15 +202,15 @@ M.display = function ( w )
     end
   end
 
-  -- bounding boxes for inertia elements, in design space
+  -- bounding boxes for inertia elements and forces, defined in design space
   local function draw_bbox_body ( body, element, color )
     local center = element.bbox.center
-    local placement = element.placement or vec3()
-    local pos = vec3( 
-      body.position[1]+placement[1]+center[1], 
-      body.position[2]+placement[2]+center[2], 
-      body.position[3]+placement[3]+center[3]
-    )
+    local placement = element.placement
+    bbox_centerd:set(center[1], center[2], center[3])
+    if placement then bbox_centerd:add(placement, bbox_centerd) end
+    -- design to world: shifts by the centre of gravity and rotates with the body
+    body:get_pointd_positionw(bbox_centerd, bbox_centerw)
+    local pos = vec3(bbox_centerw[1], bbox_centerw[2], bbox_centerw[3])
     local rot = glmath.quat(body.orientation[4],
       body.orientation[1],body.orientation[2],body.orientation[3]):mat4()
     local scl = assert(element.bbox.scale)
