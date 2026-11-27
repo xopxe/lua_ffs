@@ -71,14 +71,8 @@ T.test('generator: params are a copy', function()
   T.near(polar_generator.params.SYMMETRICAL.cl2, 5.16, 0)
 end)
 
-T.xfail('generator works without math.pow (Lua 5.4+ builds without compat, Lua 5.5)', 'polar_generator.lua uses math.pow', function()
-  local saved = math.pow
-  math.pow = nil
-  T.reset_modules()
-  local ok, err = pcall(function()
-    require('fsim.polar_generator').get_aerodata('SYMMETRICAL').sample(0.1)
+T.test('generator works without math.pow (Lua 5.4+ without compat, Lua 5.5)', function()
+  T.without_math({'pow'}, function()
+    T.finite({require('fsim.polar_generator').get_aerodata('SYMMETRICAL').sample(0.1)})
   end)
-  math.pow = saved
-  T.reset_modules()
-  if not ok then error(err, 0) end
 end)

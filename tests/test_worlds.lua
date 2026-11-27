@@ -60,11 +60,71 @@ T.test('flight: glides', function()
   T.ok(a.position[1] > 100, 'x = ' .. a.position[1])
 end)
 
--- known bugs ---------------------------------------------------------------
-
-T.xfail('pendulum loads', 'force class forces.world_space.get_spring does not exist', function()
-  load('world/pendulum.lua')
+T.test('pendulum: anchor stays fixed, ball hangs from the spring', function()
+  local w = load('world/pendulum.lua')
+  T.ok(w.forces.spring1, 'spring registered by name')
+  run(w, 10)
+  T.vnear(w.bodies.b1.position, {0, 0, 2})
+  T.ok(w.bodies.b2.position[3] < 2, 'ball below the anchor')
 end)
+
+-- data files ----------------------------------------------------------------
+
+-- run a world's init/write/close as start.lua does, with files and
+-- gnuplot stubbed out; returns the written rows and the commands run
+local function capture_data ( filename )
+  local w = load(filename)
+  local rows, opened, ran = {}, {}, {}
+  local real_open, real_execute = io.open, os.execute
+  io.open = function ( path )
+    opened[#opened+1] = path
+    return { write = function ( _, s ) rows[#rows+1] = s end, close = function () end }
+  end
+  os.execute = function ( cmd ) ran[#ran+1] = cmd end
+  local ok, err = pcall(function()
+    if w.init then T.quiet(w.init) end
+    w.now = 0
+    for i = 1, 1000 do
+      w:step(0.005)
+      if i % 200 == 0 then w.write() end  -- once per simulated second
+    end
+    w.close()
+  end)
+  io.open, os.execute = real_open, real_execute
+  if not ok then error(err, 0) end
+  return rows, opened, ran
+end
+
+for _, case in ipairs{
+  {'world/drop.lua', 'drop.data'},
+  {'world/balloon.lua', 'balloon.data'},
+  {'world/flight.lua', 'wing.data'},
+  {'world/pendulum.lua', 'pendulum.data'},
+} do
+  local world_file, data_file = case[1], case[2]
+  T.test(world_file .. ': writes ' .. data_file, function()
+    local rows, opened, ran = capture_data(world_file)
+    T.eq(opened[1], data_file)
+    T.eq(#rows, 5)
+    for k, row in ipairs(rows) do
+      local cols = {}
+      for x in row:gmatch('%S+') do cols[#cols+1] = tonumber(x) end
+      T.eq(#cols, 6, 'numeric columns in ' .. row)
+      T.near(cols[1], k, 1e-6, 'first column is the time')
+    end
+    T.ok(ran[1] and ran[1]:find('gnuplot'), 'close() plots the data')
+  end)
+end
+
+T.test('worlds without a data file write nothing', function()
+  for _, f in ipairs{'world/sea.lua', 'world/sea_flat.lua'} do
+    local rows, opened = capture_data(f)
+    T.eq(#rows, 0, f)
+    T.eq(#opened, 0, f)
+  end
+end)
+
+-- known bugs ---------------------------------------------------------------
 
 T.xfail('flight survives hitting the water', 'wing in water density, explicit integration overshoots', function()
   run(load('world/flight.lua'), 25)

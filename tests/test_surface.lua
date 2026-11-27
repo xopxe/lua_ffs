@@ -86,17 +86,9 @@ T.test('powsine_wave normal matches the height gradient', function()
   check_normal((waves('powsine_wave', {K = 2.5})))
 end)
 
--- known bugs ---------------------------------------------------------------
-
-T.xfail('works without math.pow (Lua 5.4+ builds without compat, Lua 5.5)', 'surface.lua uses math.pow', function()
-  local saved = math.pow
-  math.pow = nil
-  T.reset_modules()
-  local ok, err = pcall(function()
+T.test('works without math.pow (Lua 5.4+ without compat, Lua 5.5)', function()
+  T.without_math({'pow'}, function()
     local s = require('fsim.surface').powsine_wave{ h0 = 0, K = 2, {amplitude = 1, length = 10} }
-    s.height(1, 2, 3)
+    T.finite(s.height(1, 2, 3))
   end)
-  math.pow = saved
-  T.reset_modules()
-  if not ok then error(err, 0) end
 end)

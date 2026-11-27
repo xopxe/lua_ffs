@@ -119,4 +119,16 @@ function T.reset_modules ()
   end
 end
 
+-- run fn on freshly loaded project modules with some math functions
+-- removed, as in Lua 5.4+ built without compatibility (and Lua 5.5)
+function T.without_math ( names, fn )
+  local saved = {}
+  for _, n in ipairs(names) do saved[n] = math[n]; math[n] = nil end
+  T.reset_modules()
+  local ok, err = pcall(fn)
+  for _, n in ipairs(names) do math[n] = saved[n] end
+  T.reset_modules()
+  if not ok then error(err, 0) end
+end
+
 return T

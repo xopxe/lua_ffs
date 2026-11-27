@@ -1,7 +1,7 @@
 --require('mobdebug').coro()
 
 local sched = require 'lumen.sched'
-local loader = require 'fsim.loader'
+local loader = require 'loader'
 local view = require 'fvis-three.visualize'.init() --sets sched.get_time to socket.gettime
 --local view = require 'fvis-moongl.visualize'.init()  --sets sched.get_time to sglfw.get_time
 

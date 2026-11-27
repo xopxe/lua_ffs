@@ -87,6 +87,15 @@ T.test('to_euler recovers roll, pitch, yaw', function()
   end
 end)
 
+T.test('to_euler works without math.atan2 (Lua 5.4+ without compat, Lua 5.5)', function()
+  T.without_math({'atan2'}, function()
+    local q = require 'fsim.quaternion'
+    local v = require 'fsim.vec3'
+    local e = q.from_axis_angle(v.new{0, 0, 1}, rad(30)):to_euler()
+    T.near(deg(e[3]), 30, 1e-9)
+  end)
+end)
+
 T.test('slerp interpolates along the great arc', function()
   local f = quat.slerp(quat.new(), axis_angle(Z, rad(90)))
   T.qnear(f(0), quat.new(), 1e-12)
