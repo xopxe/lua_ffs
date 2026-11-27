@@ -30,6 +30,7 @@ init = function()
 end
 
 local UP = V3{0,0,1}
+local up_body = V3{0,0,0}
 write = function()
 
   local v3a = L.ERROR_ON_V3_AUTOALLOC
@@ -42,7 +43,7 @@ write = function()
 
     b.velocity[1]..' '..
     b.velocity[3]..' '..
-    L.math.deg(b.orientation:rotate_vec(UP):angle(UP))..' '..
+    L.math.deg(b.orientation:rotate_vec(UP, up_body):angle(UP))..' '..
     '\n'
   )
 
