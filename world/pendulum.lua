@@ -43,7 +43,7 @@ medium = {
 
 camera = {
   class = 'camera_fps',
-  pos = V3{0, -4, 0},
+  position = V3{0, -4, 0},
 }
 
 inertia_bbox_color = {1.0, 0.0, 0.0}

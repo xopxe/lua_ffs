@@ -52,7 +52,7 @@ medium = {
 
 camera = {
   class = 'camera_fps',
-  pos = V3{0, -1, 0.5},
+  position = V3{0, -1, 0.5},
   pitch = L.math.rad(-20),
 }
 
