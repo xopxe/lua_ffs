@@ -17,7 +17,7 @@ local N = world.surface_shader.parameters.side_count
 return function()
 
   local points = {}   --float data[N][N]; array of data heights
-  local npoints 
+  local nvertices
   --for i=1, N*N do -- flat mesh
   --  points[i] = 0.0
   --end
@@ -46,7 +46,7 @@ return function()
         insert_point(x1, y1)
       end
     end
-    npoints = #points
+    nvertices = #points // 3 -- x, y, z per vertex
     return true
   end
   populate_vertices()
@@ -72,7 +72,7 @@ return function()
 
           gl.unbind_buffer('array')
 
-          gl.draw_arrays("triangles", 0, npoints)
+          gl.draw_arrays("triangles", 0, nvertices)
 
           gl.unbind_vertex_array()
         end,
