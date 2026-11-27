@@ -4,7 +4,6 @@ local M = {}
 local PI = math.pi
 local PI_2 = PI/2
 local exp = math.exp
-local pow = math.pow
 local rad = math.rad
 local cos = math.cos
 local sin = math.sin
@@ -40,7 +39,7 @@ end
 local function CD ( f, aoa )
   -- drag coefficient for wing profile
   --var result = this.cd1 + this.cd2 * Math.pow( this.CL(aoa), 2 );
-  return f.cd1 + f.cd2 * pow( CL( f, aoa), 2 );
+  return f.cd1 + f.cd2 * CL( f, aoa )^2
 end
 
 local function  Win ( f, x, pos1, pos2 )

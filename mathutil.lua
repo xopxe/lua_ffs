@@ -1,6 +1,6 @@
 local M = {}
 local random, sqrt, PI, exp, log, ceil, cos, sin, atan2, acos = 
-math.random, math.sqrt, math.pi, math.exp, math.log, math.ceil, math.cos, math.sin, math.atan2, math.acos
+math.random, math.sqrt, math.pi, math.exp, math.log, math.ceil, math.cos, math.sin, math.atan, math.acos
 
 
 function M.avgstd(t)

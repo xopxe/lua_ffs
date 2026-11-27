@@ -3,7 +3,7 @@
 local M = {}
 
 local vec3 = require'fsim.vec3'
-local cos, sin, sqrt, pow = math.cos, math.sin, math.sqrt, math.pow
+local cos, sin, sqrt = math.cos, math.sin, math.sqrt
 local random = math.random
 local PI = math.pi
 local PIx2 = PI*2
@@ -122,9 +122,9 @@ M.powsine_wave = function ( ws )
       local sin_phase = sin(phase)
       local cos_phase = cos(phase)
 
-      h = h + 2*A*(pow(0.5*(sin_phase+1.0), K)-1.0)
+      h = h + 2*A*((0.5*(sin_phase+1.0))^K-1.0)
 
-      local dh = K*w*A * pow(0.5*(sin_phase+1.0), K-1) * cos_phase
+      local dh = K*w*A * (0.5*(sin_phase+1.0))^(K-1) * cos_phase
 
       norm[1], norm[2] = norm[1]-dirx*dh, norm[2]-diry*dh
     end
