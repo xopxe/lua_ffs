@@ -18,8 +18,8 @@ assert(world.medium.surface.generator == 'sine_wave', 'shader / wave generator m
 --local prog, vsh, fsh = gl.make_program({vertex="fvis-moongl/shaders/7.3.camera.vert",
 --    fragment="fvis-moongl/shaders/7.3.camera.frag"})
 local prog, vsh, fsh = gl.make_program({
-    vertex="fvis-moongl/shaders/wavepatch_sine_wave.vert",
-    fragment="fvis-moongl/shaders/wavepatch_sine_wave.frag"})
+    vertex="fvis-moongl/shaders/ocean_sine_wave.vert",
+    fragment="fvis-moongl/shaders/ocean_sine_wave.frag"})
 gl.delete_shaders(vsh, fsh)
 
 -- tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
