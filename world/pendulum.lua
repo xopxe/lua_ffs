@@ -16,7 +16,7 @@ bodies = {
 ---[[
 forces = {
   {
-    class = 'forces.world_space.get_spring',
+    class = 'forces.get_spring',
     params = {
       name = 'spring1',
       body1 = BODY_FROM_NAME'b1',
