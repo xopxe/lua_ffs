@@ -1,4 +1,4 @@
-local radius, mass = 0.2, 10 --0.066/2, 0.058  -- tennis ball
+local radius, mass = 0.066/2, 0.058  -- tennis ball
 
 inertia = {
   {
