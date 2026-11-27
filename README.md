@@ -29,14 +29,22 @@ cd moongl
 make 
 sudo make install
 cd ..
-sudo apt install libglfw3
+sudo apt install libglfw3 libglfw3-dev
 git clone https://github.com/stetre/moonglfw
 cd moonglfw
 make 
 sudo make install
+cd ..
+git clone https://github.com/stetre/moonimage
+cd moonimage
+make
+sudo make install
+cd ..
+git clone https://github.com/stetre/moonglmath
+cd moonglmath
+make
+sudo make install
 ```
-
-These may ask for some more MoonGL libs to be installed.
 
 Also, there is some code around to write data for gnuplot, especially for debugging purposes.
 
