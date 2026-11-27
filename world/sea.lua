@@ -131,7 +131,7 @@ write = function()
   if file then 
     local b1=bodies.b1
     local b2=bodies.b2
-    file:write(now..' '..
+    file:write(WORLD.now..' '..
       b1.position[1]..' '..
       b1.position[3]..' '..
       b2.position[1]..' '..

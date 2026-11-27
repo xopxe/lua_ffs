@@ -30,9 +30,9 @@ write = function()
   local a=bodies.avion
 
   --local eu = a.orientation:to_euler()
-  --print(now, L.math.deg(eu[1]),L.math.deg(eu[2]),L.math.deg(eu[3]))
+  --print(WORLD.now, L.math.deg(eu[1]),L.math.deg(eu[2]),L.math.deg(eu[3]))
 
-  file:write(now..' '..
+  file:write(WORLD.now..' '..
     a.position[1]..' '..
     a.position[3]..' '..
     a.velocity[1]..' '..

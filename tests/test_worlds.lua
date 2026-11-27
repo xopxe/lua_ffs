@@ -116,6 +116,13 @@ for _, case in ipairs{
   end)
 end
 
+T.test('loader keeps its sandbox names out of the world', function()
+  local w = load('world/balloon.lua')
+  for _, k in ipairs{'IMPORT_BODY', 'BODY_FROM_NAME', 'V3', 'L', 'print', 'WORLD'} do
+    T.ok(rawget(w, k) == nil, 'world.' .. k)
+  end
+end)
+
 T.test('worlds without a data file write nothing', function()
   for _, f in ipairs{'world/sea.lua', 'world/sea_flat.lua'} do
     local rows, opened = capture_data(f)

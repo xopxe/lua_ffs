@@ -37,7 +37,7 @@ write = function()
   L.ERROR_ON_V3_AUTOALLOC = false
 
   local b=bodies.b
-  file:write(now..' '..
+  file:write(WORLD.now..' '..
     b.position[1]..' '..
     b.position[3]..' '..
 

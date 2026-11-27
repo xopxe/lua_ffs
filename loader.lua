@@ -34,8 +34,9 @@ M.parse_loadworld = function ( wrld )
     math.randomseed(wrld.randomseed)
   end
 
-  local skiplist = {'IMPORT_BODY', 'BODY_FROM_NAME', 'V3', 'L', 'print', 'init'}
-  for _, s in ipairs(skiplist) do wrld[s] = nil end
+  -- names the loader puts in the sandbox: they stay there for the world
+  -- file's functions (write, close...), but are not copied into the world
+  local skipset = {IMPORT_BODY=true, BODY_FROM_NAME=true, V3=true, L=true, print=true, WORLD=true}
 
   -- link names if available
   for i=1, #wrld.bodies do
@@ -94,8 +95,10 @@ M.parse_loadworld = function ( wrld )
 
   --wrld = world.new ( wrld )
   for k, v in pairs(wrld) do
-    if world[k] then print ('Overwriting world.'..k) end
-    world[k] = v
+    if not skipset[k] then
+      if world[k] then print ('Overwriting world.'..k) end
+      world[k] = v
+    end
   end
 
 
@@ -197,7 +200,8 @@ M.load_world = function ( filename )
     V3=create_vector, 
     L=assert(_G),
     print=print,
-  } -- check skiplist above
+    WORLD=world, -- live world state, e.g. WORLD.now
+  } -- check skipset above
   print( "loading world from", filename )
   local cmd = assert( loadfile(filename, 'bt', loadobject) )
   object_name_store = {}
