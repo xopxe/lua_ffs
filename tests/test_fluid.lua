@@ -22,14 +22,14 @@ end
 
 T.test('sphere drag in air: 1/2 rho v^2 Cd A, against the motion', function()
   local b = body{position = vec3.new{0, 0, 10}, velocity = vec3.new{10, 0, 0}}
-  fluid.drag_shape.sphere{body = b, radius = 0.5}.apply(0)
+  fluid.drag_shape.sphere{medium = medium, body = b, radius = 0.5}.apply(0)
   local F = 0.5 * rho_air(10) * 100 * 0.47 * PI * 0.25
   T.vnear(b.force, {-F, 0, 0}, 1e-9)
 end)
 
 T.test('sphere drag in water uses water density', function()
   local b = body{position = vec3.new{0, 0, -10}, velocity = vec3.new{0, 0, -2}}
-  fluid.drag_shape.sphere{body = b, radius = 0.5}.apply(0)
+  fluid.drag_shape.sphere{medium = medium, body = b, radius = 0.5}.apply(0)
   T.vnear(b.force, {0, 0, 0.5 * RHO_W * 4 * 0.47 * PI * 0.25}, 1e-9)
 end)
 
@@ -37,7 +37,7 @@ T.test('drag is relative to the current', function()
   local saved = medium.atmosphere.current:clone()
   medium.atmosphere.current:set(3, 0, 0)
   local b = body{position = vec3.new{0, 0, 10}, velocity = vec3.new{3, 0, 0}}
-  fluid.drag_shape.sphere{body = b, radius = 0.5}.apply(0)
+  fluid.drag_shape.sphere{medium = medium, body = b, radius = 0.5}.apply(0)
   medium.atmosphere.current:set(saved[1], saved[2], saved[3])
   T.vnear(b.force, {0, 0, 0})
 end)
@@ -45,7 +45,7 @@ end)
 T.test('sphere drag uses the velocity of its placement, damping spin', function()
   -- spinning in place at 2 rad/s about z: the shape at x=1 moves at 2 m/s along y
   local b = body{position = vec3.new{0, 0, 10}, angular_velocity = vec3.new{0, 0, 2}}
-  fluid.drag_shape.sphere{body = b, radius = 0.5, placement = vec3.new{1, 0, 0}}.apply(0)
+  fluid.drag_shape.sphere{medium = medium, body = b, radius = 0.5, placement = vec3.new{1, 0, 0}}.apply(0)
   local F = 0.5 * rho_air(10) * 4 * 0.47 * PI * 0.25
   T.vnear(b.force, {0, -F, 0}, 1e-9)
   T.vnear(b.torque, {0, 0, -F}, 1e-9, 'against the spin')
@@ -57,32 +57,32 @@ local V = 4/3 * PI * 0.5^3
 
 T.test('floater fully submerged: rho_water V g up', function()
   local b = body{position = vec3.new{0, 0, -10}}
-  fluid.floater.sphere{body = b, radius = 0.5, ro = 0}.apply(0)
+  fluid.floater.sphere{medium = medium, body = b, radius = 0.5, ro = 0}.apply(0)
   T.vnear(b.force, {0, 0, RHO_W * V * g}, 1e-9)
 end)
 
 T.test('floater contents density counts as weight', function()
   local b = body{position = vec3.new{0, 0, -10}}
-  fluid.floater.sphere{body = b, radius = 0.5, ro = RHO_W}.apply(0)
+  fluid.floater.sphere{medium = medium, body = b, radius = 0.5, ro = RHO_W}.apply(0)
   T.vnear(b.force, {0, 0, 0}, 1e-9, 'filled with water: neutral')
 end)
 
 T.test('floater in air: hot air balloon lift', function()
   local b = body{position = vec3.new{0, 0, 100}}
-  fluid.floater.sphere{body = b, radius = 0.5, ro = 1.0}.apply(0)
+  fluid.floater.sphere{medium = medium, body = b, radius = 0.5, ro = 1.0}.apply(0)
   T.near(b.force[3], (rho_air(100) - 1.0) * V * g, 1e-9)
 end)
 
 T.test('floater half submerged: half the volume in each medium', function()
   local b = body{position = vec3.new{0, 0, 0}}
-  fluid.floater.sphere{body = b, radius = 0.5, ro = 0}.apply(0)
+  fluid.floater.sphere{medium = medium, body = b, radius = 0.5, ro = 0}.apply(0)
   T.rnear(b.force[3], V/2 * (RHO_W + 1.225) * g, 1e-4)
   T.vnear(b.torque, {0, 0, 0}, 1e-9)
 end)
 
 T.test('floater cutting the surface: buoyancy acts through the centre when tilted', function()
   local b = body{position = vec3.new{0, 0, 0.1}, orientation = quat.from_axis_angle(vec3.new{1, 0, 0}, math.rad(60))}
-  fluid.floater.sphere{body = b, radius = 0.5, ro = 0}.apply(0)
+  fluid.floater.sphere{medium = medium, body = b, radius = 0.5, ro = 0}.apply(0)
   T.ok(b.force[3] > 0)
   T.vnear(b.torque, {0, 0, 0}, 1e-9)
 end)
@@ -91,7 +91,7 @@ T.test('floater cutting the surface: lever arm of an offset sphere when tilted',
   -- rolled 90 deg about x, the sphere 1 m below the centre of mass in design
   -- space ends up 1 m along +y in the world, half submerged
   local b = body{orientation = quat.from_axis_angle(vec3.new{1, 0, 0}, math.rad(90))}
-  fluid.floater.sphere{body = b, radius = 0.5, ro = 0, placement = vec3.new{0, 0, -1}}.apply(0)
+  fluid.floater.sphere{medium = medium, body = b, radius = 0.5, ro = 0, placement = vec3.new{0, 0, -1}}.apply(0)
   local F = b.force[3]
   T.rnear(F, V/2 * (RHO_W + 1.225) * g, 1e-4)
   -- vertical forces acting 1 m along y: world torque (F, 0, 0), also (F, 0, 0) in body space
@@ -104,7 +104,7 @@ local function solid_ball ( z )
     inertia = inertia.element.from_shape('solid_sphere', {radius = 0.2, mass = 10}),
     position = vec3.new{0, 0, z}, gravity = true,
   }
-  return b, fluid.floater.sphere{body = b, radius = 0.2, ro = 0}, fluid.drag_shape.sphere{body = b, radius = 0.2}
+  return b, fluid.floater.sphere{medium = medium, body = b, radius = 0.2, ro = 0}, fluid.drag_shape.sphere{medium = medium, body = b, radius = 0.2}
 end
 
 -- height where buoyancy balances weight, by bisection
@@ -154,7 +154,7 @@ local function wing_body ( pitch_deg, z, speed )
 end
 
 local function wing ( b )
-  return fluid.foil.wing{body = b, params = {}, aero_data = 'polar_generator',
+  return fluid.foil.wing{medium = medium, body = b, params = {}, aero_data = 'polar_generator',
     aero_data_params = 'SYMMETRICAL', span = 10, area = 10}
 end
 
@@ -213,13 +213,13 @@ end)
 
 T.test('projectile: minimum drag when aligned with the flow', function()
   local b = body{position = vec3.new{0, 0, 100}, velocity = vec3.new{10, 0, 0}}
-  fluid.drag_shape.projectile{body = b, forward = vec3.new{1, 0, 0}, width = 0.5, length = 4}.apply(0)
+  fluid.drag_shape.projectile{medium = medium, body = b, forward = vec3.new{1, 0, 0}, width = 0.5, length = 4}.apply(0)
   T.vnear(b.force, {-0.5 * rho_air(100) * 100 * 0.1 * 0.25, 0, 0}, 1e-9)
 end)
 
 T.test('projectile drag uses the velocity of its placement, damping spin', function()
   local b = body{position = vec3.new{0, 0, 100}, angular_velocity = vec3.new{0, 0, 2}}
-  fluid.drag_shape.projectile{body = b, forward = vec3.new{0, 1, 0}, width = 0.5, length = 4,
+  fluid.drag_shape.projectile{medium = medium, body = b, forward = vec3.new{0, 1, 0}, width = 0.5, length = 4,
     placement = vec3.new{1, 0, 0}}.apply(0)
   local F = 0.5 * rho_air(100) * 4 * 0.1 * 0.25  -- aligned with the flow: Cd_min, width^2
   T.vnear(b.force, {0, -F, 0}, 1e-9)
@@ -228,6 +228,18 @@ end)
 
 T.xfail('projectile without forward uses the default', 'default is stored in body_forward but apply() reads forward', function()
   local b = body{position = vec3.new{0, 0, 100}, velocity = vec3.new{10, 0, 0}}
-  fluid.drag_shape.projectile{body = b}.apply(0)
+  fluid.drag_shape.projectile{medium = medium, body = b}.apply(0)
   T.ok(b.force[1] < 0)
+end)
+
+T.test('a force without a medium is refused', function()
+  local new = {
+    ['drag_shape.sphere'] = fluid.drag_shape.sphere,
+    ['drag_shape.projectile'] = fluid.drag_shape.projectile,
+    ['foil.wing'] = fluid.foil.wing,
+    ['floater.sphere'] = fluid.floater.sphere,
+  }
+  for name, f in pairs(new) do
+    T.raises(function() f{radius = 0.5} end, 'medium', name)
+  end
 end)

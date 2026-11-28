@@ -109,8 +109,8 @@ function T.quiet ( fn, ... )
   return table.unpack(res, 2, res.n)
 end
 
--- forget project modules so the next require() gets fresh singletons
--- (fsim.world and fsim.medium keep global state)
+-- forget project modules so the next require() gets fresh copies (forces
+-- built outside a world share the default fsim.medium)
 function T.reset_modules ()
   for name in pairs(package.loaded) do
     if name:match('^fsim%.') or name == 'loader' then

@@ -3,7 +3,7 @@ local M = {}
 local gl = require("moongl")
 local glmath = require("moonglmath")
 
-local world = require'fsim.world'
+local world -- the world being drawn, set by prepare_scene
 
 local perspective = glmath.perspective
 local rotate, translate, scale = glmath.rotate, glmath.translate, glmath.scale
@@ -12,9 +12,7 @@ local unpack = unpack or table.unpack
 local rad, sin, cos, sqrt = math.rad, math.sin, math.cos, math.sqrt
 local vec3, vec4 = glmath.vec3, glmath.vec4
 
-assert(world.medium.surface.generator == 'powsine_wave', 'shader / wave generator mismatch')
 local MAX_WAVES = 16 -- as in the .vert
-assert(#world.medium.surface <= MAX_WAVES, 'the GPU ocean draws at most '..MAX_WAVES..' waves')
 
 -- build, compile, and link our shader program ---------------------------------
 --local prog, vsh, fsh = gl.make_program({vertex="fvis-moongl/shaders/7.3.camera.vert",
@@ -133,7 +131,12 @@ local function update_area_frustum( material )
   area[1][1], area[1][2], area[2][1], area[2][2] = minx, miny, maxx, maxy
 end
 
-M.prepare_scene = function( world, SCR_WIDTH, SCR_HEIGHT )
+M.prepare_scene = function( w, SCR_WIDTH, SCR_HEIGHT )
+  if w ~= world then
+    world = w
+    assert(world.medium.surface.generator == 'powsine_wave', 'shader / wave generator mismatch')
+    assert(#world.medium.surface <= MAX_WAVES, 'the GPU ocean draws at most '..MAX_WAVES..' waves')
+  end
   local light = assert(world.light)
   local camera = assert(world.camera)
 

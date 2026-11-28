@@ -28,6 +28,7 @@ local a = rbody.new{
 a.velocity:set(0,0,0)
 
 local w = assert(fluid.foil.wing{
+    medium = medium,
     body = a,
     
     aero_data = 'polar_generator', aero_data_params = 'SYMMETRICAL',

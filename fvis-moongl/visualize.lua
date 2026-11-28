@@ -111,7 +111,7 @@ M.init = function ( conf )
     --ocean = require(world.surface_shader.drawable)(),
   }
   if world.surface_shader then
-    shapes.ocean = require(world.surface_shader.drawable)()
+    shapes.ocean = require(world.surface_shader.drawable)(world)
   end
 
   glfw.set_framebuffer_size_callback(window, function (window, w, h)

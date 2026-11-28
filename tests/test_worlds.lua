@@ -137,10 +137,41 @@ T.xfail('flight survives hitting the water', 'wing in water density, explicit in
   run(load('world/flight.lua'), 25)
 end)
 
-T.xfail('a world does not inherit state from the previous one', 'loader copies into the fsim.world and fsim.medium singletons', function()
+T.test('a world does not inherit the previous one\'s medium', function()
   load('world/balloon.lua')                 -- sets a 0.5 m/s wind
   local w = load('world/drop.lua', true)    -- no wind
   T.vnear(w.medium.atmosphere.current, {0, 0, 0})
+end)
+
+T.test('a world does not inherit the previous one\'s fields', function()
+  load('world/pendulum.lua')                -- a world force, camera, box colours
+  local w = load('world/flight.lua', true)  -- none of them
+  T.eq(#w.forces, 0, 'world forces')
+  T.eq(w.forces.spring1, nil, 'named world force')
+  T.eq(w.camera, nil, 'camera')
+  T.eq(w.inertia_bbox_color, nil, 'inertia_bbox_color')
+  T.eq(w.now, 0, 'now')
+  T.ok(w.bodies.avion and #w.bodies == 1, 'only its own bodies')
+  run(w, 1)
+end)
+
+T.test('worlds loaded together keep their own world and medium', function()
+  local w1 = load('world/balloon.lua')      -- 0.5 m/s wind, flat sea
+  local w2 = load('world/sea.lua', true)    -- no wind, powsine waves
+  T.ok(w1 ~= w2 and w1.medium ~= w2.medium, 'separate instances')
+  T.vnear(w1.medium.atmosphere.current, {0.5, 0, 0}, 1e-9, 'balloon wind')
+  T.vnear(w2.medium.atmosphere.current, {0, 0, 0}, 1e-9, 'sea wind')
+  T.eq(w1.medium.surface.generator, 'flat')
+  T.eq(w2.medium.surface.generator, 'powsine_wave')
+  for _, w in ipairs{w1, w2} do
+    for _, b in ipairs(w.bodies) do
+      for _, f in ipairs(b.forces) do
+        T.eq(f.medium, w.medium, b.name .. ' force uses its world\'s medium')
+      end
+    end
+  end
+  run(w1, 10)                               -- the balloon drifts with its wind
+  T.ok(w1.bodies[1].velocity[1] > 0.3, 'balloon vx = ' .. w1.bodies[1].velocity[1])
 end)
 
 T.xfail('loader.load_body', 'calls import_body{filename} with no params', function()

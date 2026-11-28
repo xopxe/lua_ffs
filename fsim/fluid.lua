@@ -1,6 +1,7 @@
 local M = {}
 
-local medium = require 'fsim.medium'
+-- every force is in a medium, its world's, given as params.medium (the
+-- loader sets it)
 
 local vec3 = require 'fsim.vec3'
 
@@ -37,7 +38,7 @@ M.drag_shape = {}
 
 M.drag_shape.sphere = function ( s )
   --s = s or {}
-  assert(s.medium==nil)
+  local medium = assert(s.medium, 'a force needs the medium it is in')
   --assert(s.surface)
   assert(s.body)
   s.radius = s.radius or 1
@@ -76,6 +77,7 @@ M.drag_shape.sphere = function ( s )
 end
 M.drag_shape.projectile = function ( s ) --made up
   --s = s or {}
+  local medium = assert(s.medium, 'a force needs the medium it is in')
   --assert(s.surface)
   assert(s.body)
 
@@ -145,7 +147,7 @@ M.foil = {}
 
 -- sustentation + induced drag
 M.foil.wing = function ( f )
-  assert(f.medium==nil)
+  local medium = assert(f.medium, 'a force needs the medium it is in')
   --assert(f.surface)
   assert(f.body)
   assert(f.series or f.params)
@@ -246,7 +248,7 @@ end
 M.floater = {}
 
 M.floater.sphere = function ( f )
-  assert(f.medium==nil)
+  local medium = assert(f.medium, 'a force needs the medium it is in')
   --assert(f.surface)
   assert(f.body)
   assert(f.radius)

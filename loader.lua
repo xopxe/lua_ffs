@@ -3,9 +3,15 @@ local M = {}
 local vec3 = require 'fsim.vec3'
 local inertia = require 'fsim.inertia'
 local rbody = require 'fsim.rigid_body'
-local world = require 'fsim.world'
 
 local object_name_store
+
+-- a fresh copy of a module, instead of the one require() shares: each world
+-- gets its own fsim.world and fsim.medium, so it inherits nothing from others
+local function new_instance ( name )
+  local filename = assert(package.searchpath(name, package.path))
+  return assert(loadfile(filename))()
+end
 
 local function clone_table ( def, skipset )
   local p = {}
@@ -25,10 +31,13 @@ local function parse_path ( s )
   return p
 end
 
-M.parse_loadworld = function ( wrld )
-  --local forces = {}
-  --local medium = {}
-  
+-- builds the world defined by wrld into world, an fsim.world instance with
+-- an fsim.medium instance as world.medium (fresh ones when not given)
+M.parse_loadworld = function ( wrld, world )
+  world = world or new_instance('fsim.world')
+  world.medium = world.medium or new_instance('fsim.medium')
+  local medium = world.medium
+
   if wrld.randomseed then
     print ('randomseed:', wrld.randomseed)
     math.randomseed(wrld.randomseed)
@@ -53,6 +62,8 @@ M.parse_loadworld = function ( wrld )
     local name = params.name
     print ('world force class', class, 'under name', name)
 
+    params.medium = medium
+
     local path = parse_path(fdef.class)
     local current = assert( require('fsim.'..path[1]) )
     for i=2, #path-1 do
@@ -67,7 +78,6 @@ M.parse_loadworld = function ( wrld )
   end
 
   do
-    local medium = require 'fsim.medium'
     wrld.medium = wrld.medium or {}
 
     --surface
@@ -96,7 +106,7 @@ M.parse_loadworld = function ( wrld )
   --wrld = world.new ( wrld )
   for k, v in pairs(wrld) do
     if not skipset[k] then
-      if world[k] then print ('Overwriting world.'..k) end
+      if world[k] ~= nil and world[k] ~= v then print ('Overwriting world.'..k) end
       world[k] = v
     end
   end
@@ -106,7 +116,8 @@ M.parse_loadworld = function ( wrld )
   return world
 end
 
-M.parse_loadbody = function ( bdy )
+-- medium: the medium of the world the body is in, handed to its forces
+M.parse_loadbody = function ( bdy, medium )
   local inertia_element
   local forces
 
@@ -145,6 +156,7 @@ M.parse_loadbody = function ( bdy )
       local name = params.name
 
       params.body = bdy --!!!!!!!! implies one&only one exists
+      params.medium = medium
 
       local path = parse_path(fdef.class)
       local current = assert( require('fsim.'..path[1]) )
@@ -169,7 +181,7 @@ local create_vector = function (v)
   return vec3.new(v)
 end
 
-local import_body = function (filename, params)
+local import_body = function (filename, params, medium)
   local loadobject = {V3=create_vector}
   local name = params.name
   print( "importing body from", filename, 'as', name)
@@ -179,7 +191,7 @@ local import_body = function (filename, params)
   for k, v in pairs(params) do
     loadobject[k] = v
   end
-  local b = M.parse_loadbody(loadobject)
+  local b = M.parse_loadbody(loadobject, medium)
   assert(not object_name_store[name], 'duplicated name: '..tostring(name))
   object_name_store[name] = b
   return b
@@ -194,10 +206,16 @@ M.load_body = function ( filename )
 end
 
 M.load_world = function ( filename )
-  local loadobject = { 
-    IMPORT_BODY=import_body, 
-    BODY_FROM_NAME=body_from_name, 
-    V3=create_vector, 
+  -- this world's own instances, created before running the file, as
+  -- building its bodies needs the medium
+  local world = new_instance('fsim.world')
+  world.medium = new_instance('fsim.medium')
+  local loadobject = {
+    IMPORT_BODY=function (filename, params)
+      return import_body(filename, params, world.medium)
+    end,
+    BODY_FROM_NAME=body_from_name,
+    V3=create_vector,
     L=assert(_G),
     print=print,
     WORLD=world, -- live world state, e.g. WORLD.now
@@ -207,7 +225,7 @@ M.load_world = function ( filename )
   object_name_store = {}
   cmd()
   object_name_store = {}
-  local w = M.parse_loadworld(loadobject)
+  local w = M.parse_loadworld(loadobject, world)
   return w
 end
 

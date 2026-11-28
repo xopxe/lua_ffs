@@ -8,7 +8,11 @@ local g_accel = -9.8 --m/sec^2
 
 local boxsize = vec3.new{0.1,0.1,0.1}*0.5
 
+-- every force is in a medium, its world's, given as f.medium (the loader
+-- sets it)
+
 M.get_constant_w = function ( f )
+  assert(f.medium, 'a force needs the medium it is in')
   assert(f.body)
   f.point = f.point or vec3.new() -- design space
   f.force = f.force or vec3.new() -- world space
@@ -20,6 +24,7 @@ M.get_constant_w = function ( f )
 end
 
 M.get_spring = function ( f )
+  assert(f.medium, 'a force needs the medium it is in')
   assert(f.body1)
   assert(f.body2)
   f.point1 = f.point1 or vec3.new() -- design space
@@ -70,6 +75,7 @@ M.get_spring = function ( f )
 end
 
 M.get_gravity = function ( f )
+  assert(f.medium, 'a force needs the medium it is in')
   assert(f.body1)
   assert(f.body2)
 
@@ -93,6 +99,7 @@ M.get_gravity = function ( f )
 end
 
 M.get_constant_d = function ( f )
+  assert(f.medium, 'a force needs the medium it is in')
   assert(f.body)
   f.point = f.point or vec3.new() -- design space
   f.force = f.force or vec3.new() -- design space
@@ -108,6 +115,7 @@ local function linear_interpol(x1,y1, x2,y2, x)
 end
 
 M.floater_points = function ( f )
+  assert(f.medium, 'a force needs the medium it is in')
   assert(f.points)
   assert(f.body)
   assert(f.drag)
@@ -115,7 +123,7 @@ M.floater_points = function ( f )
   assert(f.FL) -- float line from bottom
   assert(f.DL) -- deck height from bottom
 
-  local medium = require('fsim.medium')
+  local medium = f.medium
 
   local Wp = -g_accel * f.body.inertia.mass / #f.points
 

@@ -6,15 +6,14 @@ local mat4 = glmath.mat4
 local point4 = glmath.vec4
 
 --local medium = require'fsim.medium'
-local world = require'fsim.world'
 
 local function linear_interpol(x1,y1, x2,y2, x)
   return y1+((x-x1)/(x2-x1))*(y2-y1)
 end
 
-local N = world.surface_shader.parameters.side_count
-
-return function()
+-- world: the world whose sea is drawn
+return function( world )
+  local N = world.surface_shader.parameters.side_count
 
   local points = {}   --float data[N][N]; array of data heights
   local nvertices
