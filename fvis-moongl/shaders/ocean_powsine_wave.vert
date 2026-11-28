@@ -16,6 +16,7 @@ uniform int n_waves = 0;
 uniform vec4 waves[MAX_WAVES];  // amplitude, length, dirx, diry
 uniform float h0 = 0.0;
 uniform float K = 3.0;
+uniform float shape_mean = 0.3125;  // mean of ((sin+1)/2)^K, so h0 is the mean level
 
 uniform float x_min = 0.0;
 uniform float y_min = 0.0;
@@ -43,13 +44,13 @@ void main()
       float amplitude = waves[i].x;
       float dirx = waves[i].z;
       float diry = waves[i].w;
-      float w = 2/waves[i].y;
-      float phi = sqrt( g_accel*M_PI*w );
+      float w = 2*M_PI/waves[i].y;  // wavenumber: waves[i].y is the wavelength
+      float phi = sqrt( g_accel*w );  // angular frequency, deep water
       float phase = (pos.x*dirx+pos.y*diry)*w + T*phi;
       float sin_phase = sin(phase);
       float cos_phase = cos(phase);
 
-      pos.z += 2*amplitude * (pow( 0.5*(sin_phase+1) , K) - 1.0);
+      pos.z += 2*amplitude * (pow( 0.5*(sin_phase+1) , K) - shape_mean);
 
       float dh = K*w*amplitude*pow( 0.5*(sin_phase+1.0) , K-1)*cos_phase;
       normal += vec3( -dirx*dh, -diry*dh, 0.0);

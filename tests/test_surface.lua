@@ -66,19 +66,53 @@ end)
 
 T.test('sine_wave single wave is periodic in time', function()
   local s = surface.sine_wave{ h0 = 0, {amplitude = 1, length = 10, dir = 0} }
-  local omega = math.sqrt(9.8 * math.pi * 2 / 10)
+  local omega = math.sqrt(9.8 * 2 * math.pi / 10)  -- deep water: omega^2 = g k
   local period = 2 * math.pi / omega
   for _, x in ipairs{0, 1.5, 4} do
     T.near(s.height(x, 0, 1 + period), s.height(x, 0, 1), 1e-9)
   end
 end)
 
-T.test('powsine_wave stays within [h0 - 2 sum(A), h0]', function()
+-- one wave along x, 10 m long
+local function single ( generator, K )
+  return surface[generator]{ h0 = 0.5, K = K, {amplitude = 0.3, length = 10, dir = 0} }
+end
+
+for _, generator in ipairs{'sine_wave', 'powsine_wave'} do
+  T.test(generator .. ': a wave repeats every length metres', function()
+    local s = single(generator, 2)
+    for _, x in ipairs{0, 1.5, 4} do
+      T.near(s.height(x + 10, 0, 1), s.height(x, 0, 1), 1e-9, 'x = ' .. x)
+    end
+  end)
+
+  T.test(generator .. ': a wave travels at the deep water speed sqrt(g L / 2 pi)', function()
+    local s = single(generator, 2)
+    local c, dt = math.sqrt(9.8 * 10 / (2 * math.pi)), 0.7
+    for _, x in ipairs{0, 1.5, 4} do
+      -- the phase is k (dir . x) + omega t, so the crests move towards -dir
+      T.near(s.height(x - c * dt, 0, 1 + dt), s.height(x, 0, 1), 1e-9, 'x = ' .. x)
+    end
+  end)
+end
+
+T.test('powsine_wave: h0 is the mean sea level', function()
+  for _, K in ipairs{1.5, 2, 2.5, 3} do
+    local s = single('powsine_wave', K)
+    local N, sum = 997, 0
+    for i = 0, N - 1 do sum = sum + s.height(10 * i / N, 0, 1) end
+    T.near(sum / N, 0.5, 1e-9, 'K = ' .. K)
+  end
+end)
+
+T.test('powsine_wave stays within [h0 - 2 m sum(A), h0 + 2 (1 - m) sum(A)]', function()
   local s, p = waves('powsine_wave', {K = 2})
   local A = amplitude_sum(p)
+  local m = 0.375  -- mean of ((sin + 1) / 2)^2 over a period
+  T.near(s.shape_mean, m, 1e-12)
   for i = 0, 200 do
     local h = s.height(i * 0.37, i * -0.21, i * 0.05)
-    T.ok(h >= p.h0 - 2 * A - 1e-12 and h <= p.h0 + 1e-12, 'h = ' .. h)
+    T.ok(h >= p.h0 - 2 * m * A - 1e-12 and h <= p.h0 + 2 * (1 - m) * A + 1e-12, 'h = ' .. h)
   end
 end)
 

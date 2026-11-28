@@ -75,8 +75,8 @@ M.sine_wave = function ( ws )
       local wave = ws[iwave]
       local dirx, diry = wave.dirx, wave.diry
       local A = wave.amplitude
-      local w = 2/wave.length --frequency
-      local phi = sqrt(-g_accel*PI*w) --water wave speed from length
+      local w = PIx2/wave.length --wavenumber: wave.length is the wavelength
+      local phi = sqrt(-g_accel*w) --angular frequency, deep water: phi^2 = g*w
       local phase = (dirx*x + diry*y)*w + t*phi -- + wave.offset
 
       h = h + A * sin(phase)
@@ -107,6 +107,15 @@ M.powsine_wave = function ( ws )
 
   local K = ws.K
 
+  -- mean of the wave shape ((sin+1)/2)^K over a period, subtracted so that
+  -- h0 is the mean sea level (the GPU shader needs it too)
+  do
+    local N, sum = 1000, 0.0  -- exact for integer K < N/2
+    for i = 0, N-1 do sum = sum + (0.5*(sin(PIx2*i/N)+1.0))^K end
+    ws.shape_mean = sum/N
+  end
+  local shape_mean = ws.shape_mean
+
   ws.height = function ( x, y, t )
     t = t+100.0 --unsync at (x,y,t)=(0,0,0)
     local h = ws.h0 or 0.0
@@ -115,14 +124,14 @@ M.powsine_wave = function ( ws )
       local wave = ws[iwave]
       local dirx, diry = wave.dirx, wave.diry
       local A = wave.amplitude
-      local w = 2/wave.length --frequency
-      local phi = sqrt(-g_accel*PI*w) --water wave speed from length
+      local w = PIx2/wave.length --wavenumber: wave.length is the wavelength
+      local phi = sqrt(-g_accel*w) --angular frequency, deep water: phi^2 = g*w
       local phase = (dirx*x + diry*y)*w + t*phi -- + wave.offset
 
       local sin_phase = sin(phase)
       local cos_phase = cos(phase)
 
-      h = h + 2*A*((0.5*(sin_phase+1.0))^K-1.0)
+      h = h + 2*A*((0.5*(sin_phase+1.0))^K-shape_mean)
 
       local dh = K*w*A * (0.5*(sin_phase+1.0))^(K-1) * cos_phase
 

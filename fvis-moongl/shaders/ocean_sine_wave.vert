@@ -42,8 +42,8 @@ void main()
       float amplitude = waves[i].x;
       float dirx = waves[i].z;
       float diry = waves[i].w;
-      float w = 2/waves[i].y;
-      float phi = sqrt( g_accel*M_PI*w );
+      float w = 2*M_PI/waves[i].y;  // wavenumber: waves[i].y is the wavelength
+      float phi = sqrt( g_accel*w );  // angular frequency, deep water
       float phase = (pos.x*dirx+pos.y*diry)*w + T*phi;
 
       pos.z += amplitude * sin(phase);

@@ -25,8 +25,9 @@ T.test('sea: boat and buoy float', function()
   T.ok(w.bodies.boatb and w.bodies.buoy, 'bodies registered by name')
   run(w, 20)
   for _, b in ipairs(w.bodies) do
-    -- the powsine sea surface sits between -2*sum(A) and 0
-    T.ok(b.position[3] > -1.5 and b.position[3] < 0.5, b.name .. ' z = ' .. b.position[3])
+    -- the powsine sea surface (K = 2, sum(A) = 0.46) sits between about
+    -- -0.34 and +0.57, around its mean level h0 = 0
+    T.ok(b.position[3] > -1.0 and b.position[3] < 1.0, b.name .. ' z = ' .. b.position[3])
   end
 end)
 

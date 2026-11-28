@@ -33,6 +33,7 @@ loc = {
   waves = {},
   h0 = gl.get_uniform_location(prog, "h0"),
   K = gl.get_uniform_location(prog, "K"),
+  shape_mean = gl.get_uniform_location(prog, "shape_mean"),
   x_min = gl.get_uniform_location(prog, "x_min"),
   y_min = gl.get_uniform_location(prog, "y_min"),
   x_step = gl.get_uniform_location(prog, "x_step"),
@@ -157,6 +158,7 @@ M.prepare_scene = function( w, SCR_WIDTH, SCR_HEIGHT )
   gl.uniformi(loc.n_waves, #surface)
   gl.uniformf(loc.h0, surface.h0)
   gl.uniformf(loc.K, world.medium.surface.K)
+  gl.uniformf(loc.shape_mean, surface.shape_mean)
   
   gl.uniformf(loc.t, world.now)
 
