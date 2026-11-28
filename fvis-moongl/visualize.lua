@@ -278,6 +278,11 @@ M.poll = function ()
   if keypressed('z') then camera:process_keyboard('down', dt) end
 end
 
+-- sleeps for up to timeout seconds, waking early to handle window events
+M.wait = function ( timeout )
+  if timeout > 0 then glfw.wait_events_timeout(timeout) end
+end
+
 M.should_close = function ()
   return glfw.window_should_close(window)
 end

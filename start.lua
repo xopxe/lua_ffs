@@ -35,6 +35,8 @@ local fsim_step, fsim_run_time, fsim_run_cycles = 0.001, 0, 0
 local fsim_max_lag = 0.1
 local fsim_time_lost = 0.0  -- clock time the simulation could not keep up with
 local fvis_step, fvis_run_time, fvis_run_cycles = 1/30, 0, 0
+-- the loop sleeps between frames, so the simulation lags by up to a frame
+assert(fvis_step < fsim_max_lag, 'fsim_max_lag must be longer than a frame')
 local fsim_write_step = total_run_time/200
 
 -- simulated time starts at 0 and runs in fixed steps of fsim_step, whatever
@@ -85,9 +87,13 @@ repeat
     view.poll()
   end
   
-  --
-
   now = get_time()
+  -- sleep until the next frame rather than spin; the steps that come due
+  -- meanwhile run in one go just before it is drawn
+  if now < t_view then
+    view.wait(t_view - now)
+    now = get_time()
+  end
 
 until fsim_run_cycles >= fsim_total_steps or view.should_close()
 if profiler then print( profiler.format( profiler.stop() ) ) end
