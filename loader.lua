@@ -8,12 +8,12 @@ local object_name_store
 
 -- a fresh copy of a module, instead of the one require() shares: each world
 -- gets its own fsim.world and fsim.medium, so it inherits nothing from others
-local function new_instance ( name )
+local function new_instance(name)
   local filename = assert(package.searchpath(name, package.path))
   return assert(loadfile(filename))()
 end
 
-local function clone_table ( def, skipset )
+local function clone_table(def, skipset)
   local p = {}
   for k, v in pairs(def) do
     if not (skipset and skipset[k]) then
@@ -23,57 +23,57 @@ local function clone_table ( def, skipset )
   return p
 end
 
-local function parse_path ( s )
+local function parse_path(s)
   local p = {}
   for w in string.gmatch(s, "([^%.]+)") do
-    p[#p+1] = w
+    p[#p + 1] = w
   end
   return p
 end
 
 -- builds the world defined by wrld into world, an fsim.world instance with
 -- an fsim.medium instance as world.medium (fresh ones when not given)
-M.parse_loadworld = function ( wrld, world )
+M.parse_loadworld = function(wrld, world)
   world = world or new_instance('fsim.world')
   world.medium = world.medium or new_instance('fsim.medium')
   local medium = world.medium
 
   if wrld.randomseed then
-    print ('randomseed:', wrld.randomseed)
+    print('randomseed:', wrld.randomseed)
     math.randomseed(wrld.randomseed)
   end
 
   -- names the loader puts in the sandbox: they stay there for the world
   -- file's functions (write, close...), but are not copied into the world
-  local skipset = {IMPORT_BODY=true, BODY_FROM_NAME=true, V3=true, L=true, print=true, WORLD=true}
+  local skipset = { IMPORT_BODY = true, BODY_FROM_NAME = true, V3 = true, L = true, print = true, WORLD = true }
 
   -- link names if available
-  for i=1, #wrld.bodies do
+  for i = 1, #wrld.bodies do
     local name = wrld.bodies[i].name
     if name then
-      assert(not wrld.bodies[name], 'duplicated name: '..tostring(name))
+      assert(not wrld.bodies[name], 'duplicated name: ' .. tostring(name))
       wrld.bodies[name] = wrld.bodies[i]
     end
   end
 
-  for fidx, fdef in ipairs( wrld.forces or {} ) do
+  for fidx, fdef in ipairs(wrld.forces or {}) do
     local class = fdef.class
     local params = fdef.params
     local name = params.name
-    print ('world force class', class, 'under name', name)
+    print('world force class', class, 'under name', name)
 
     params.medium = medium
 
     local path = parse_path(fdef.class)
-    local current = assert( require('fsim.'..path[1]) )
-    for i=2, #path-1 do
+    local current = assert(require('fsim.' .. path[1]))
+    for i = 2, #path - 1 do
       current = current[path[i]]
     end
-    local f = current[path[#path]](params)      
+    local f = current[path[#path]](params)
     wrld.forces[fidx] = f
-    if name then 
-      assert(not wrld.forces[name], 'duplicated name: '..tostring(name))
-      wrld.forces[name] = f 
+    if name then
+      assert(not wrld.forces[name], 'duplicated name: ' .. tostring(name))
+      wrld.forces[name] = f
     end
   end
 
@@ -81,13 +81,13 @@ M.parse_loadworld = function ( wrld, world )
     wrld.medium = wrld.medium or {}
 
     --surface
-    local surface = wrld.medium.surface or {generator='flat', params={h0=0}}
+    local surface = wrld.medium.surface or { generator = 'flat', params = { h0 = 0 } }
     --[[
     local surface_generator = surface.generator
     local surface_params = surface.params
     medium.surface = require'fsim.surface'[surface_generator](surface_params)
     --]]
-    medium.surface = require'fsim.surface'.wavetrain_generate(surface.generator,surface.params)
+    medium.surface = require 'fsim.surface'.wavetrain_generate(surface.generator, surface.params)
 
     --atmosphere
     for k, v in pairs(wrld.medium.atmosphere or {}) do
@@ -106,7 +106,7 @@ M.parse_loadworld = function ( wrld, world )
   --wrld = world.new ( wrld )
   for k, v in pairs(wrld) do
     if not skipset[k] then
-      if world[k] ~= nil and world[k] ~= v then print ('Overwriting world.'..k) end
+      if world[k] ~= nil and world[k] ~= v then print('Overwriting world.' .. k) end
       world[k] = v
     end
   end
@@ -117,25 +117,25 @@ M.parse_loadworld = function ( wrld, world )
 end
 
 -- medium: the medium of the world the body is in, handed to its forces
-M.parse_loadbody = function ( bdy, medium )
+M.parse_loadbody = function(bdy, medium)
   local inertia_element
   local forces
 
   do
     local inertia_elements = {}
-    for iidx, idef in ipairs( bdy.inertia or {} ) do
+    for iidx, idef in ipairs(bdy.inertia or {}) do
       local class = idef.class
       local params = idef.params
       local name = params.name
 
       local e = inertia.element.from_shape(class, params)
       inertia_elements[iidx] = e
-      if name then 
-        assert(not inertia_elements[name], 'duplicated name: '..tostring(name))
-        inertia_elements[name] = e 
+      if name then
+        assert(not inertia_elements[name], 'duplicated name: ' .. tostring(name))
+        inertia_elements[name] = e
       end
     end
-    if #inertia_elements==1 then 
+    if #inertia_elements == 1 then
       inertia_element = inertia_elements[1]
     else
       inertia_element = inertia.element.from_elements(inertia_elements)
@@ -150,7 +150,7 @@ M.parse_loadbody = function ( bdy, medium )
   end
 
   do
-    for fidx, fdef in ipairs( forces ) do
+    for fidx, fdef in ipairs(forces) do
       local class = fdef.class
       local params = fdef.params
       local name = params.name
@@ -159,15 +159,15 @@ M.parse_loadbody = function ( bdy, medium )
       params.medium = medium
 
       local path = parse_path(fdef.class)
-      local current = assert( require('fsim.'..path[1]) )
-      for i=2, #path-1 do
+      local current = assert(require('fsim.' .. path[1]))
+      for i = 2, #path - 1 do
         current = current[path[i]]
       end
-      local f = current[path[#path]](params)      
+      local f = current[path[#path]](params)
       forces[fidx] = f
-      if name then 
-        assert(not forces[name], 'duplicated name: '..tostring(name))
-        forces[name] = f 
+      if name then
+        assert(not forces[name], 'duplicated name: ' .. tostring(name))
+        forces[name] = f
       end
     end
     bdy.forces = forces
@@ -177,51 +177,51 @@ M.parse_loadbody = function ( bdy, medium )
 end
 
 
-local create_vector = function (v)
+local create_vector = function(v)
   return vec3.new(v)
 end
 
-local import_body = function (filename, params, medium)
-  local loadobject = {V3=create_vector}
+local import_body = function(filename, params, medium)
+  local loadobject = { V3 = create_vector }
   local name = params.name
-  print( "importing body from", filename, 'as', name)
-  local cmd = assert( loadfile(filename, 'bt', loadobject) )
+  print("importing body from", filename, 'as', name)
+  local cmd = assert(loadfile(filename, 'bt', loadobject))
   cmd()
-  -- overwrite fields from file object 
+  -- overwrite fields from file object
   for k, v in pairs(params) do
     loadobject[k] = v
   end
   local b = M.parse_loadbody(loadobject, medium)
-  assert(not object_name_store[name], 'duplicated name: '..tostring(name))
+  assert(not object_name_store[name], 'duplicated name: ' .. tostring(name))
   object_name_store[name] = b
   return b
 end
 
-local body_from_name = function ( name )
-  return assert(object_name_store[name], 'unknown name: '..tostring(name))
+local body_from_name = function(name)
+  return assert(object_name_store[name], 'unknown name: ' .. tostring(name))
 end
 
-M.load_body = function ( filename )
-  return import_body{ filename }
+M.load_body = function(filename)
+  return import_body { filename }
 end
 
-M.load_world = function ( filename )
+M.load_world = function(filename)
   -- this world's own instances, created before running the file, as
   -- building its bodies needs the medium
   local world = new_instance('fsim.world')
   world.medium = new_instance('fsim.medium')
   local loadobject = {
-    IMPORT_BODY=function (filename, params)
+    IMPORT_BODY = function(filename, params)
       return import_body(filename, params, world.medium)
     end,
-    BODY_FROM_NAME=body_from_name,
-    V3=create_vector,
-    L=assert(_G),
-    print=print,
-    WORLD=world, -- live world state, e.g. WORLD.now
-  } -- check skipset above
-  print( "loading world from", filename )
-  local cmd = assert( loadfile(filename, 'bt', loadobject) )
+    BODY_FROM_NAME = body_from_name,
+    V3 = create_vector,
+    L = assert(_G),
+    print = print,
+    WORLD = world, -- live world state, e.g. WORLD.now
+  }              -- check skipset above
+  print("loading world from", filename)
+  local cmd = assert(loadfile(filename, 'bt', loadobject))
   object_name_store = {}
   cmd()
   object_name_store = {}
